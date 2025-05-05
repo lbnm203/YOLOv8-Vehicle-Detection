@@ -172,3 +172,36 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# YOLOv8 specific
+runs/
+*.pt
+*.onnx
+*.engine
+*.trt
+*.mlmodel
+
+# Dataset files (if you don't want to include them in version control)
+yolov8_dataset/train/images/
+yolov8_dataset/train/labels/
+yolov8_dataset/val/images/
+yolov8_dataset/val/labels/
+yolov8_dataset/test/images/
+yolov8_dataset/test/labels/
+
+# MLflow artifacts
+mlruns/
+mlflow.db
+
+# Large media files
+*.mp4
+*.avi
+*.mov
+*.wmv
+
+# Streamlit cache
+.streamlit/
+
+# Model checkpoints
+checkpoints/
+weights/
