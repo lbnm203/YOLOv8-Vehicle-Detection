@@ -1,7 +1,8 @@
-path: ../
-train: train/images
-val: val/images
-test: test/images
+# Use relative paths for better portability
+path: ./  # Root directory is where this YAML file is located
+train: ./train/images
+val: ./val/images
+test: ./test/images
 names:
   0: auto
   1: bicycle

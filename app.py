@@ -1,14 +1,15 @@
 import streamlit as st
 import cv2
 
-from src.data_t import * 
+from src.data_t import *
 from src.theory_t import *
-
+from src.train_t import *
 
 st.set_page_config(
-    page_title="YOLOv8 Vehicle Detection", 
+    page_title="YOLOv8 Vehicle Detection",
     layout="centered"
 )
+
 
 def main():
     st.title("YOLOv8 Vehicle Detection")
@@ -24,14 +25,14 @@ def main():
         yolov8_theory()
 
     with train_tab:
-        pass
+        train_model()
 
     with demo_tab:
         pass
 
     with mlflow_tab:
         pass
-    
+
 
 if __name__ == "__main__":
     main()
