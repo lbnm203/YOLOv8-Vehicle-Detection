@@ -4,6 +4,7 @@ import cv2
 from src.data_t import *
 from src.theory_t import *
 from src.train_t import *
+from src.demo_t import *
 
 st.set_page_config(
     page_title="YOLOv8 Vehicle Detection",
@@ -28,7 +29,7 @@ def main():
         train_model()
 
     with demo_tab:
-        pass
+        demo_detection()
 
     with mlflow_tab:
         pass

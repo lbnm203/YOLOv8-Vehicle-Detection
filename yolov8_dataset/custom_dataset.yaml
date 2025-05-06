@@ -1,5 +1,5 @@
 # Use relative paths for better portability
-path: ./  # Root directory is where this YAML file is located
+path: ./yolov8_dataset # Root directory is where this YAML file is located
 train: ./train/images
 val: ./val/images
 test: ./test/images
