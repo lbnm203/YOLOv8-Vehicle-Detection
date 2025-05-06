@@ -1,4 +1,4 @@
-# YOLOv8 Vehicle Detection
+# YOLOv8 Vehicle Detection (**It's not final version !!!**)
 
 A comprehensive application for vehicle detection using YOLOv8, featuring dataset exploration, model training, and real-time detection with a Streamlit interface.
 
