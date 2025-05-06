@@ -1,10 +1,10 @@
 import streamlit as st
-import cv2
 
 from src.data_t import *
 from src.theory_t import *
 from src.train_t import *
 from src.demo_t import *
+from src.mlflow_t import *
 
 st.set_page_config(
     page_title="YOLOv8 Vehicle Detection",
@@ -32,7 +32,7 @@ def main():
         demo_detection()
 
     with mlflow_tab:
-        pass
+        display_mlflow_runs()
 
 
 if __name__ == "__main__":
