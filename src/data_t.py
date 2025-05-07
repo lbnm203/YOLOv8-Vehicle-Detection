@@ -27,12 +27,12 @@ def download_dataset_from_huggingface():
         os.makedirs("./yolov8_dataset/test/images", exist_ok=True)
         os.makedirs("./yolov8_dataset/test/labels", exist_ok=True)
 
-        # Save YAML configuration
+        # Save YAML configuration with correct paths
         yaml_content = {
-            'path': './',
-            'train': 'train/images',
-            'val': 'val/images',
-            'test': 'test/images',
+            'path': './yolov8_dataset',  # Root directory
+            'train': 'train/images',     # No leading ./
+            'val': 'val/images',         # No leading ./
+            'test': 'test/images',       # No leading ./
             'names': {
                 0: 'auto',
                 1: 'bicycle',
@@ -115,38 +115,66 @@ def data_description():
     st.write("- **Những lớp/phương tiện có trong tập dữ liệu:** auto, bicycle, bus, car, tempo, tractor, two_wheelers, vehicle_truck")
     st.write("---")
 
-    # Đọc tệp YAML
-    with open('./yolov8_dataset/custom_dataset.yaml', 'r') as f:
-        dataset_config = yaml.safe_load(f)
+    try:
+        # Đọc tệp YAML
+        with open('./yolov8_dataset/custom_dataset.yaml', 'r') as f:
+            dataset_config = yaml.safe_load(f)
 
-    # Lấy thông tin từ YAML
-    yaml_dir = os.path.dirname('./yolov8_dataset/custom_dataset.yaml')
-    train_dir = os.path.join(yaml_dir, dataset_config['train'])
-    val_dir = os.path.join(yaml_dir, dataset_config['val'])
-    test_dir = os.path.join(yaml_dir, dataset_config['test'])
-    # ['auto', 'bicycle', ...]
-    class_names = list(dataset_config['names'].values())
+        # Lấy thông tin từ YAML
+        yaml_dir = os.path.dirname('./yolov8_dataset/custom_dataset.yaml')
+        
+        # Fix path handling - ensure we have absolute paths
+        train_path = dataset_config.get('train', 'train/images')
+        val_path = dataset_config.get('val', 'val/images')
+        test_path = dataset_config.get('test', 'test/images')
+        
+        # Remove leading ./ if present
+        train_path = train_path[2:] if train_path.startswith('./') else train_path
+        val_path = val_path[2:] if val_path.startswith('./') else val_path
+        test_path = test_path[2:] if test_path.startswith('./') else test_path
+        
+        # Construct full paths
+        train_dir = os.path.join('./yolov8_dataset', train_path)
+        val_dir = os.path.join('./yolov8_dataset', val_path)
+        test_dir = os.path.join('./yolov8_dataset', test_path)
+        
+        # ['auto', 'bicycle', ...]
+        class_names = list(dataset_config['names'].values())
 
-    # Đếm số lượng hình ảnh trong mỗi tập
-    train_count = len([f for f in os.listdir(train_dir)
-                      if f.endswith(('.jpg', '.png'))])
-    val_count = len([f for f in os.listdir(val_dir)
-                    if f.endswith(('.jpg', '.png'))])
-    test_count = len([f for f in os.listdir(test_dir)
-                     if f.endswith(('.jpg', '.png'))])
+        # Check if directories exist
+        if not os.path.exists(train_dir):
+            st.warning(f"Training directory not found: {train_dir}")
+            return
+        if not os.path.exists(val_dir):
+            st.warning(f"Validation directory not found: {val_dir}")
+            return
+        if not os.path.exists(test_dir):
+            st.warning(f"Test directory not found: {test_dir}")
+            return
 
-    # a. Vẽ biểu đồ phân bố số lượng hình ảnh
-    st.write("#### Phân bố số lượng hình ảnh trong các tập dữ liệu")
-    fig, ax = plt.subplots(figsize=(8, 5))
-    ax.bar(['Train', 'Val', 'Test'], [train_count, val_count,
-           test_count], color=['blue', 'orange', 'green'])
-    ax.set_title('Phân bố số lượng hình ảnh trong các tập dữ liệu')
-    ax.set_xlabel('Tập dữ liệu')
-    ax.set_ylabel('Số lượng hình ảnh')
-    st.pyplot(fig)
+        # Đếm số lượng hình ảnh trong mỗi tập
+        train_count = len([f for f in os.listdir(train_dir)
+                          if f.endswith(('.jpg', '.png'))])
+        val_count = len([f for f in os.listdir(val_dir)
+                        if f.endswith(('.jpg', '.png'))])
+        test_count = len([f for f in os.listdir(test_dir)
+                         if f.endswith(('.jpg', '.png'))])
 
-    # Gọi hàm phân tích dataset với các biến đã định nghĩa
-    analyze_dataset(train_dir, class_names)
+        # a. Vẽ biểu đồ phân bố số lượng hình ảnh
+        st.write("#### Phân bố số lượng hình ảnh trong các tập dữ liệu")
+        fig, ax = plt.subplots(figsize=(8, 5))
+        ax.bar(['Train', 'Val', 'Test'], [train_count, val_count,
+               test_count], color=['blue', 'orange', 'green'])
+        ax.set_title('Phân bố số lượng hình ảnh trong các tập dữ liệu')
+        ax.set_xlabel('Tập dữ liệu')
+        ax.set_ylabel('Số lượng hình ảnh')
+        st.pyplot(fig)
+
+        # Gọi hàm phân tích dataset với các biến đã định nghĩa
+        analyze_dataset(train_dir, class_names)
+    except Exception as e:
+        st.error(f"Error analyzing dataset: {str(e)}")
+        st.info("Please make sure the dataset is properly downloaded and configured.")
 
 
 # b. Phân tích phân bố lớp (nếu có nhãn)
