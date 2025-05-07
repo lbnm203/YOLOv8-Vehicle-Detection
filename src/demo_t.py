@@ -127,7 +127,7 @@ def demo_detection():
 
             # Display original image
             st.write("### Ảnh gốc")
-            st.image(image, caption="Ảnh đầu vào", use_column_width=True)
+            st.image(image, caption="Ảnh đầu vào", use_container_width=True)
 
             # Process image
             results = process_image(model, image_np, conf_threshold)
@@ -139,7 +139,7 @@ def demo_detection():
                 # Display output image
                 st.write("### Kết quả phát hiện")
                 st.image(output_image, caption="Kết quả",
-                         use_column_width=True)
+                         use_container_width=True)
 
                 # Display detection details
                 if results.boxes is not None and len(results.boxes) > 0:
@@ -206,7 +206,7 @@ def demo_detection():
 
                 # Display frame
                 video_placeholder.image(
-                    output_frame, caption="Frame preview", use_column_width=True)
+                    output_frame, caption="Frame preview", use_container_width=True)
 
             # Option to process full video
             if st.button("Xử lý toàn bộ video"):

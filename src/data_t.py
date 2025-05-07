@@ -20,19 +20,19 @@ def download_dataset_from_huggingface():
         ds = load_dataset("lbnm203/yolov8_dataset")
 
         # Create local directories if they don't exist
-        os.makedirs("./yolov8_dataset/train/images", exist_ok=True)
-        os.makedirs("./yolov8_dataset/train/labels", exist_ok=True)
-        os.makedirs("./yolov8_dataset/val/images", exist_ok=True)
-        os.makedirs("./yolov8_dataset/val/labels", exist_ok=True)
-        os.makedirs("./yolov8_dataset/test/images", exist_ok=True)
-        os.makedirs("./yolov8_dataset/test/labels", exist_ok=True)
+        os.makedirs("yolov8_dataset/train/images", exist_ok=True)
+        os.makedirs("yolov8_dataset/train/labels", exist_ok=True)
+        os.makedirs("yolov8_dataset/val/images", exist_ok=True)
+        os.makedirs("yolov8_dataset/val/labels", exist_ok=True)
+        os.makedirs("yolov8_dataset/test/images", exist_ok=True)
+        os.makedirs("yolov8_dataset/test/labels", exist_ok=True)
 
         # Save YAML configuration with correct paths
         yaml_content = {
-            'path': './yolov8_dataset',  # Root directory
-            'train': 'train/images',     # No leading ./
-            'val': 'val/images',         # No leading ./
-            'test': 'test/images',       # No leading ./
+            'path': 'yolov8_dataset',  # Root directory without leading ./
+            'train': 'train/images',   # No leading ./
+            'val': 'val/images',       # No leading ./
+            'test': 'test/images',     # No leading ./
             'names': {
                 0: 'auto',
                 1: 'bicycle',
@@ -45,7 +45,7 @@ def download_dataset_from_huggingface():
             }
         }
 
-        with open('./yolov8_dataset/custom_dataset.yaml', 'w') as f:
+        with open('yolov8_dataset/custom_dataset.yaml', 'w') as f:
             yaml.dump(yaml_content, f, default_flow_style=False)
 
         # Extract and save images and labels from the dataset
@@ -55,15 +55,13 @@ def download_dataset_from_huggingface():
                     # Save image
                     if 'image' in item:
                         img = Image.fromarray(item['image'])
-                        img.save(
-                            f"./yolov8_dataset/{split}/images/{item['image_id']}.jpg")
+                        img.save(f"yolov8_dataset/{split}/images/{item['image_id']}.jpg")
 
                     # Save label
                     if 'labels' in item:
-                        with open(f"./yolov8_dataset/{split}/labels/{item['image_id']}.txt", 'w') as f:
+                        with open(f"yolov8_dataset/{split}/labels/{item['image_id']}.txt", 'w') as f:
                             for label in item['labels']:
-                                f.write(
-                                    f"{label['class']} {label['x_center']} {label['y_center']} {label['width']} {label['height']}\n")
+                                f.write(f"{label['class']} {label['x_center']} {label['y_center']} {label['width']} {label['height']}\n")
 
         st.success("Dataset downloaded and prepared successfully!")
         return True
@@ -100,77 +98,86 @@ def data_description():
                 "Click the button above to download the dataset from Hugging Face.")
             return
 
+    # Display dataset information
     st.write("Tập dữ liệu này được thu thâp bởi DataCluster Labs. Bộ dữ liệu này là một tập hợp gồm hơn 50.000 hình ảnh xe gốc được chụp và thu thập từ hơn 1000 khu vực thành thị và nông thôn, trong đó mỗi hình ảnh đều được các chuyên gia về thị giác máy tính tại Datacluster Labs xem xét và xác minh thủ công")
 
+    # Display dataset information
     st.write("#### Một số thông tin về tập dữ liệu:")
-
     st.write("- **Kích thước tập dữ liệu:** 50.000+ hình ảnh")
     st.write("- **Được chụp bởi:** Hơn 1000+ người đóng góp cộng đồng")
     st.write("- **Độ phân giải:** 100% hình ảnh là HD trở lên (1920x1080 trở lên)")
     st.write("- **Địa điểm:** Chụp ảnh tại hơn 1000 thành phố trên khắp Ấn Độ")
     st.write("- **Tính đa dạng:** Nhiều điều kiện ánh sáng khác nhau như ngày, đêm, khoảng cách khác nhau, điểm nhìn, ...")
-    st.write(
-        "- **Thiết bị sử dụng:** Chụp bằng điện thoại di động trong năm 2020-2022")
+    st.write("- **Thiết bị sử dụng:** Chụp bằng điện thoại di động trong năm 2020-2022")
     st.write("- **Công dụng:** Phát hiện xe cộ, Phát hiện ô tô, Phát hiện xe xây dựng, Hệ thống tự lái, ...")
     st.write("- **Những lớp/phương tiện có trong tập dữ liệu:** auto, bicycle, bus, car, tempo, tractor, two_wheelers, vehicle_truck")
     st.write("---")
 
     try:
-        # Đọc tệp YAML
-        with open('./yolov8_dataset/custom_dataset.yaml', 'r') as f:
+        # Read YAML file
+        with open(yaml_path, 'r') as f:
             dataset_config = yaml.safe_load(f)
 
-        # Lấy thông tin từ YAML
-        yaml_dir = os.path.dirname('./yolov8_dataset/custom_dataset.yaml')
+        # Get class names
+        class_names = list(dataset_config['names'].values())
         
-        # Fix path handling - ensure we have absolute paths
+        # Get base directory
+        base_dir = os.path.dirname(yaml_path)
+        
+        # Construct paths properly
         train_path = dataset_config.get('train', 'train/images')
         val_path = dataset_config.get('val', 'val/images')
         test_path = dataset_config.get('test', 'test/images')
         
-        # Remove leading ./ if present
+        # Remove any leading ./ from paths
         train_path = train_path[2:] if train_path.startswith('./') else train_path
         val_path = val_path[2:] if val_path.startswith('./') else val_path
         test_path = test_path[2:] if test_path.startswith('./') else test_path
         
-        # Construct full paths
-        train_dir = os.path.join('./yolov8_dataset', train_path)
-        val_dir = os.path.join('./yolov8_dataset', val_path)
-        test_dir = os.path.join('./yolov8_dataset', test_path)
+        # Construct absolute paths
+        train_dir = os.path.normpath(os.path.join(base_dir, train_path))
+        val_dir = os.path.normpath(os.path.join(base_dir, val_path))
+        test_dir = os.path.normpath(os.path.join(base_dir, test_path))
         
-        # ['auto', 'bicycle', ...]
-        class_names = list(dataset_config['names'].values())
-
+        # Debug paths
+        st.write(f"Debug - Train directory: {train_dir}")
+        
         # Check if directories exist
         if not os.path.exists(train_dir):
             st.warning(f"Training directory not found: {train_dir}")
+            # Try to create directories
+            os.makedirs(train_dir, exist_ok=True)
+            st.info("Created training directory")
             return
+            
         if not os.path.exists(val_dir):
             st.warning(f"Validation directory not found: {val_dir}")
+            os.makedirs(val_dir, exist_ok=True)
+            st.info("Created validation directory")
             return
+            
         if not os.path.exists(test_dir):
             st.warning(f"Test directory not found: {test_dir}")
+            os.makedirs(test_dir, exist_ok=True)
+            st.info("Created test directory")
             return
 
-        # Đếm số lượng hình ảnh trong mỗi tập
-        train_count = len([f for f in os.listdir(train_dir)
-                          if f.endswith(('.jpg', '.png'))])
-        val_count = len([f for f in os.listdir(val_dir)
-                        if f.endswith(('.jpg', '.png'))])
-        test_count = len([f for f in os.listdir(test_dir)
-                         if f.endswith(('.jpg', '.png'))])
+        # Count images in each set
+        train_count = len([f for f in os.listdir(train_dir) if f.endswith(('.jpg', '.png'))])
+        val_count = len([f for f in os.listdir(val_dir) if f.endswith(('.jpg', '.png'))])
+        test_count = len([f for f in os.listdir(test_dir) if f.endswith(('.jpg', '.png'))])
 
-        # a. Vẽ biểu đồ phân bố số lượng hình ảnh
+        # Plot image distribution
         st.write("#### Phân bố số lượng hình ảnh trong các tập dữ liệu")
         fig, ax = plt.subplots(figsize=(8, 5))
-        ax.bar(['Train', 'Val', 'Test'], [train_count, val_count,
-               test_count], color=['blue', 'orange', 'green'])
+        ax.bar(['Train', 'Val', 'Test'], [train_count, val_count, test_count], 
+               color=['blue', 'orange', 'green'])
         ax.set_title('Phân bố số lượng hình ảnh trong các tập dữ liệu')
         ax.set_xlabel('Tập dữ liệu')
         ax.set_ylabel('Số lượng hình ảnh')
         st.pyplot(fig)
 
-        # Gọi hàm phân tích dataset với các biến đã định nghĩa
+        # Analyze dataset
         analyze_dataset(train_dir, class_names)
     except Exception as e:
         st.error(f"Error analyzing dataset: {str(e)}")

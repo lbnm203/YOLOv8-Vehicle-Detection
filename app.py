@@ -14,7 +14,7 @@ st.set_page_config(
 
 def check_dataset_availability():
     """Check if dataset is available and provide download options if not"""
-    yaml_path = './yolov8_dataset/custom_dataset.yaml'
+    yaml_path = 'yolov8_dataset/custom_dataset.yaml'
     with st.container(border=True):
         if not os.path.exists(yaml_path):
             st.warning("⚠️ Dataset not detected")
@@ -25,7 +25,7 @@ def check_dataset_availability():
             2. Download manually from [Kaggle](https://www.kaggle.com/datasets/dataclusterlabs/indian-vehicle-dataset)
             """)
 
-            # Add Hugging Face download option in sidebar
+            # Add Hugging Face download option
             if st.button("Download from Hugging Face"):
                 from src.data_t import download_dataset_from_huggingface
                 download_dataset_from_huggingface()
