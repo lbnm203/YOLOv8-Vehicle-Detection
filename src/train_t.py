@@ -41,22 +41,6 @@ def train_model():
     # Chọn model
     model_path, model_name = choose_model()
 
-    # Check if model exists
-    if not os.path.exists(model_path):
-        st.warning(f"⚠️ Model file not found: {model_path}")
-        st.info("Please make sure you have the pre-trained YOLOv8 models downloaded.")
-        
-        # Provide download instructions
-        with st.expander("Download Instructions"):
-            st.code("""
-# Download YOLOv8 models
-mkdir -p models
-wget https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt -O yolov8n.pt
-wget https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8s.pt -O yolov8s.pt
-wget https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8m.pt -O yolov8m.pt
-            """, language="bash")
-        return
-
     # Upload data config YAML
     st.write("#### Cấu hình dữ liệu (data.yaml)")
     yaml_file = st.file_uploader("Upload file data.yaml", type=['yaml', 'yml'])
@@ -69,21 +53,6 @@ wget https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8m.pt -
     if not os.path.exists(dataset_root):
         st.warning(
             f"Thư mục '{dataset_root}' không tồn tại. Vui lòng kiểm tra lại đường dẫn.")
-        
-        # Create directory option
-        if st.button("Create directory structure"):
-            try:
-                # Create base directory
-                os.makedirs(dataset_root, exist_ok=True)
-                
-                # Create subdirectories
-                for split in ['train', 'val', 'test']:
-                    for subdir in ['images', 'labels']:
-                        os.makedirs(os.path.join(dataset_root, split, subdir), exist_ok=True)
-                
-                st.success(f"Created directory structure at {dataset_root}")
-            except Exception as e:
-                st.error(f"Error creating directories: {str(e)}")
 
     # Tham số huấn luyện
     st.write("#### Tham số huấn luyện")
