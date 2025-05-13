@@ -79,19 +79,20 @@ def train_model():
         model_name_only = os.path.splitext(model_filename)[0]
         
         # Try to download the model
-        if download_model(model_name_only):
-            st.success(f"✅ Model {model_name_only} downloaded successfully!")
-        else:
-            # Provide manual download instructions if automatic download fails
-            with st.expander("Manual Download Instructions"):
-                st.code("""
-# Download YOLOv8 models
-mkdir -p models
-wget https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt -O models/yolov8n.pt
-wget https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8s.pt -O models/yolov8s.pt
-wget https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8m.pt -O models/yolov8m.pt
-                """, language="bash")
-            return
+        with st.spinner(f"Downloading {model_name_only}.pt..."):
+            if download_model(model_name_only):
+                st.success(f"✅ Model {model_name_only} downloaded successfully!")
+            else:
+                # Provide manual download instructions if automatic download fails
+                with st.expander("Manual Download Instructions"):
+                    st.code("""
+    # Download YOLOv8 models
+    mkdir -p models
+    wget https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt -O models/yolov8n.pt
+    wget https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8s.pt -O models/yolov8s.pt
+    wget https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8m.pt -O models/yolov8m.pt
+                    """, language="bash")
+                return
 
     # Upload data config YAML
     st.write("#### Cấu hình dữ liệu (data.yaml)")
@@ -195,15 +196,6 @@ wget https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8m.pt -
             st.error(f"Không tìm thấy thư mục validation: {val_path}")
             return
 
-        # # Hiển thị thông tin về đường dẫn
-        # st.write("#### Kiểm tra đường dẫn dataset:")
-        # st.write(
-        #     f"- Thư mục gốc: {dataset_root} - Tồn tại: {os.path.exists(dataset_root)}")
-        # st.write(
-        #     f"- Thư mục train: {train_path} - Tồn tại: {os.path.exists(train_path)}")
-        # st.write(
-        #     f"- Thư mục validation: {val_path} - Tồn tại: {os.path.exists(val_path)}")
-
         # Lưu tạm file YAML với đường dẫn tuyệt đối
         temp_yaml = tempfile.NamedTemporaryFile(delete=False, suffix='.yaml')
         with open(temp_yaml.name, 'w') as f:
@@ -294,29 +286,6 @@ wget https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8m.pt -
                             st.warning(
                                 "Không tìm thấy file results.csv để hiển thị metrics.")
 
-                        # st.write("#### Training Metrics")
-                        # st.dataframe(df)
-
-                        # # Plot loss curves
-                        # if 'train/loss' in df.columns and 'val/loss' in df.columns:
-                        #     fig, ax = plt.subplots()
-                        #     ax.plot(df['epoch'], df['train/loss'],
-                        #             label='Train Loss')
-                        #     ax.plot(df['epoch'], df['val/loss'],
-                        #             label='Val Loss')
-                        #     ax.set_xlabel('Epoch')
-                        #     ax.set_ylabel('Loss')
-                        #     ax.legend()
-                        #     st.pyplot(fig)
-
-                        # # Log metrics per epoch
-                        # for _, row in df.iterrows():
-                        #     epoch = int(row['epoch'])
-                        #     for col in df.columns:
-                        #         if col != 'epoch':
-                        #             mlflow.log_metric(
-                        #                 col, float(row[col]), step=epoch)
-
                         # Create a descriptive model name based on parameters
                         model_filename = f"{model_name}_e{epochs}_b{batch_size}_lr{lr:.6f}.pt"
 
@@ -354,3 +323,6 @@ wget https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8m.pt -
                             pass
     else:
         st.info("Vui lòng upload file data.yaml để bắt đầu huấn luyện.")
+
+
+
