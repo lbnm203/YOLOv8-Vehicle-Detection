@@ -8,34 +8,6 @@ import pandas as pd
 import mlflow
 
 
-def download_model(model_name):
-    """Download a pre-trained YOLOv8 model if it doesn't exist"""
-    model_path = f"models/{model_name}.pt"
-    
-    # Create models directory if it doesn't exist
-    os.makedirs("models", exist_ok=True)
-    
-    if not os.path.exists(model_path):
-        st.info(f"Downloading {model_name}.pt model...")
-        try:
-            # Use ultralytics download method
-            from ultralytics.utils.downloads import download
-            
-            url = f"https://github.com/ultralytics/assets/releases/download/v0.0.0/{model_name}.pt"
-            download(url, dir="models/")
-            
-            if os.path.exists(model_path):
-                st.success(f"✅ Downloaded {model_name}.pt successfully!")
-                return True
-            else:
-                st.error(f"❌ Failed to download {model_name}.pt")
-                return False
-        except Exception as e:
-            st.error(f"Error downloading model: {str(e)}")
-            return False
-    return True  # Model already exists
-
-
 def choose_model():
     st.write("### Chọn mô hình YOLOv8")
 
@@ -72,26 +44,18 @@ def train_model():
     # Check if model exists
     if not os.path.exists(model_path):
         st.warning(f"⚠️ Model file not found: {model_path}")
-        st.info("Attempting to download the pre-trained model...")
+        st.info("Please make sure you have the pre-trained YOLOv8 models downloaded.")
         
-        # Extract model name from path (e.g., "yolov8n" from "models/yolov8n.pt")
-        model_filename = os.path.basename(model_path)
-        model_name_only = os.path.splitext(model_filename)[0]
-        
-        # Try to download the model
-        if download_model(model_name_only):
-            st.success(f"✅ Model {model_name_only} downloaded successfully!")
-        else:
-            # Provide manual download instructions if automatic download fails
-            with st.expander("Manual Download Instructions"):
-                st.code("""
+        # Provide download instructions
+        with st.expander("Download Instructions"):
+            st.code("""
 # Download YOLOv8 models
 mkdir -p models
-wget https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt -O models/yolov8n.pt
-wget https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8s.pt -O models/yolov8s.pt
-wget https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8m.pt -O models/yolov8m.pt
-                """, language="bash")
-            return
+wget https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8n.pt -O yolov8n.pt
+wget https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8s.pt -O yolov8s.pt
+wget https://github.com/ultralytics/assets/releases/download/v0.0.0/yolov8m.pt -O yolov8m.pt
+            """, language="bash")
+        return
 
     # Upload data config YAML
     st.write("#### Cấu hình dữ liệu (data.yaml)")

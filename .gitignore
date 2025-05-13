@@ -175,7 +175,6 @@ cython_debug/
 
 # YOLOv8 specific
 runs/
-*.pt
 *.onnx
 *.engine
 *.trt
