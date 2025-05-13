@@ -8,6 +8,8 @@ import numpy as np
 import matplotlib.patches as patches
 import shutil
 import gdown
+import zipfile
+import traceback
 
 
 @st.cache_resource
@@ -34,6 +36,13 @@ def download_dataset_from_gdrive():
         yaml_path = "yolov8_dataset/custom_dataset.yaml"
         if os.path.exists(yaml_path):
             st.success("✅ Dataset downloaded and extracted successfully!")
+            
+            # Clean up zip file
+            try:
+                os.remove(zip_output)
+            except:
+                pass
+                
             return True
         else:
             st.error("❌ `custom_dataset.yaml` not found after extraction.")
@@ -41,6 +50,8 @@ def download_dataset_from_gdrive():
 
     except Exception as e:
         st.error(f"Error downloading dataset: {str(e)}")
+        st.code(traceback.format_exc())
+        
         return False
 
 
@@ -48,18 +59,34 @@ def data_description():
     st.write("### Tập Dữ Liệu Indian Vehicle Dataset")
     # Check if dataset exists locally
     yaml_path = './yolov8_dataset/custom_dataset.yaml'
+    
+    # Create base directory if it doesn't exist
+    os.makedirs('./yolov8_dataset', exist_ok=True)
+    
     if not os.path.exists(yaml_path):
-        st.warning("Dataset not found locally. Attempting to download from Google Drive...")
-
-        if st.button("Download Dataset from Google Drive"):
+        st.warning("Dataset not found locally.")
+        
+        # Create a more informative message for Streamlit web deployment
+        st.info("""
+        ### Dataset Options:
+        
+        1. ✅ Download automatically from **Google Drive**
+        2. 📥 Or download manually from [Kaggle](https://www.kaggle.com/datasets/dataclusterlabs/indian-vehicle-dataset)
+        
+        **Note for Streamlit Web Deployment:** 
+        If you're running this app on Streamlit Cloud, you'll need to download the dataset first.
+        """)
+        
+        # Button to download from Google Drive
+        if st.button("Download from Google Drive (.zip)"):
             success = download_dataset_from_gdrive()
-            if not success:
+            if success:
+                st.experimental_rerun()  # Refresh the app after download
+            else:
                 st.error("Failed to download dataset. Please try again or download manually.")
                 return
-        else:
-            st.info("Click the button above to download the dataset from Google Drive.")
-            return
-
+        return
+    
     # Display dataset information
     st.write("Tập dữ liệu này được thu thâp bởi DataCluster Labs. Bộ dữ liệu này là một tập hợp gồm hơn 50.000 hình ảnh xe gốc được chụp và thu thập từ hơn 1000 khu vực thành thị và nông thôn, trong đó mỗi hình ảnh đều được các chuyên gia về thị giác máy tính tại Datacluster Labs xem xét và xác minh thủ công")
 
@@ -103,36 +130,42 @@ def data_description():
         val_dir = os.path.normpath(os.path.join(base_dir, val_path))
         test_dir = os.path.normpath(os.path.join(base_dir, test_path))
 
-        # Debug paths
-        # st.write(f"Debug - Train directory: {train_dir}")
+        # Create directories if they don't exist
+        os.makedirs(train_dir, exist_ok=True)
+        os.makedirs(val_dir, exist_ok=True)
+        os.makedirs(test_dir, exist_ok=True)
+        
+        # Also create label directories
+        train_label_dir = train_dir.replace('images', 'labels')
+        val_label_dir = val_dir.replace('images', 'labels')
+        test_label_dir = test_dir.replace('images', 'labels')
+        
+        os.makedirs(train_label_dir, exist_ok=True)
+        os.makedirs(val_label_dir, exist_ok=True)
+        os.makedirs(test_label_dir, exist_ok=True)
 
-        # Check if directories exist
-        if not os.path.exists(train_dir):
-            st.warning(f"Training directory not found: {train_dir}")
-            # Try to create directories
-            os.makedirs(train_dir, exist_ok=True)
-            st.info("Created training directory")
-            return
-
-        if not os.path.exists(val_dir):
-            st.warning(f"Validation directory not found: {val_dir}")
-            os.makedirs(val_dir, exist_ok=True)
-            st.info("Created validation directory")
-            return
-
-        if not os.path.exists(test_dir):
-            st.warning(f"Test directory not found: {test_dir}")
-            os.makedirs(test_dir, exist_ok=True)
-            st.info("Created test directory")
+        # Check if directories have images
+        train_images = [f for f in os.listdir(train_dir) if f.endswith(('.jpg', '.png', '.jpeg'))]
+        val_images = [f for f in os.listdir(val_dir) if f.endswith(('.jpg', '.png', '.jpeg'))]
+        test_images = [f for f in os.listdir(test_dir) if f.endswith(('.jpg', '.png', '.jpeg'))]
+        
+        if not train_images or not val_images:
+            st.warning("Dataset directories exist but no images found. You need to download the dataset.")
+            
+            if st.button("Download Dataset Now"):
+                success = download_dataset_from_gdrive()
+                if success:
+                    st.experimental_rerun()
+                else:
+                    st.error("Failed to download dataset automatically.")
+                    st.info("Please download manually from [Kaggle](https://www.kaggle.com/datasets/dataclusterlabs/indian-vehicle-dataset) and extract to the yolov8_dataset directory.")
+                return
             return
 
         # Count images in each set
-        train_count = len([f for f in os.listdir(train_dir)
-                          if f.endswith(('.jpg', '.png'))])
-        val_count = len([f for f in os.listdir(val_dir)
-                        if f.endswith(('.jpg', '.png'))])
-        test_count = len([f for f in os.listdir(test_dir)
-                         if f.endswith(('.jpg', '.png'))])
+        train_count = len(train_images)
+        val_count = len(val_images)
+        test_count = len(test_images)
 
         # Plot image distribution
         st.write("#### Phân bố số lượng hình ảnh trong các tập dữ liệu")
@@ -149,6 +182,54 @@ def data_description():
     except Exception as e:
         st.error(f"Error analyzing dataset: {str(e)}")
         st.info("Please make sure the dataset is properly downloaded and configured.")
+        
+        # Provide more detailed error information
+        import traceback
+        st.code(traceback.format_exc())
+        
+        # Offer to create a sample dataset structure
+        if st.button("Create Sample Dataset Structure"):
+            create_sample_dataset_structure()
+            st.success("Created sample dataset structure. Please download the actual dataset files.")
+            st.experimental_rerun()
+
+
+def create_sample_dataset_structure():
+    """Create a sample dataset structure with the necessary directories"""
+    try:
+        # Create base directory
+        os.makedirs('./yolov8_dataset', exist_ok=True)
+        
+        # Create subdirectories
+        for split in ['train', 'val', 'test']:
+            for subdir in ['images', 'labels']:
+                os.makedirs(f'./yolov8_dataset/{split}/{subdir}', exist_ok=True)
+        
+        # Create a sample YAML file
+        yaml_content = {
+            'path': './yolov8_dataset',
+            'train': 'train/images',
+            'val': 'val/images',
+            'test': 'test/images',
+            'names': {
+                0: 'auto',
+                1: 'bicycle',
+                2: 'bus',
+                3: 'car',
+                4: 'tempo',
+                5: 'tractor',
+                6: 'two_wheelers',
+                7: 'vehicle_truck'
+            }
+        }
+        
+        with open('./yolov8_dataset/custom_dataset.yaml', 'w') as f:
+            yaml.dump(yaml_content, f, default_flow_style=False)
+            
+        return True
+    except Exception as e:
+        st.error(f"Error creating sample dataset structure: {str(e)}")
+        return False
 
 
 # b. Phân tích phân bố lớp (nếu có nhãn)
