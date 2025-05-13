@@ -21,19 +21,20 @@ def check_dataset_availability():
             st.info("""
             ### Dataset Options:
             
-            1. Download automatically from Hugging Face (recommended)
-            2. Download manually from [Kaggle](https://www.kaggle.com/datasets/dataclusterlabs/indian-vehicle-dataset)
+            1. ✅ Download automatically from **Google Drive**
+            2. 📥 Or download manually from [Kaggle](https://www.kaggle.com/datasets/dataclusterlabs/indian-vehicle-dataset)
             """)
 
-            # Add Hugging Face download option
-            if st.button("Download from Hugging Face"):
-                from src.data_t import download_dataset_from_huggingface
-                download_dataset_from_huggingface()
+            # Nút tải từ Google Drive (ZIP)
+            if st.button("Download from Google Drive (.zip)"):
+                from src.data_t import download_dataset_from_gdrive
+                success = download_dataset_from_gdrive()
+                if success:
+                    st.experimental_rerun()  # làm mới lại layout sau khi tải xong
         else:
             st.success("✅ Dataset detected")
-            # Add Hugging Face attribution
             st.markdown(
-                "Dataset hosted on [Hugging Face](https://huggingface.co/datasets/lbnm203/yolov8_dataset)")
+                "📁 Dataset hosted on [Google Drive](https://drive.google.com/file/d/1KNgMtAIjTXRCx-Q-xLb_dida3YDnRG5K/view?usp=sharing)")
 
 
 def main():

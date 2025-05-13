@@ -6,119 +6,39 @@ import random
 from PIL import Image
 import numpy as np
 import matplotlib.patches as patches
-from datasets import load_dataset
 import shutil
-from huggingface_hub import snapshot_download
+import gdown
 
-
-# @st.cache_resource
-# def download_dataset_from_huggingface():
-#     """Download and prepare the dataset from Hugging Face"""
-#     try:
-#         st.info("Downloading dataset from Hugging Face... This may take a few minutes.")
-
-#         # Load dataset from Hugging Face
-#         ds = load_dataset("lbnm203/yolov8_dataset")
-
-#         # Create local directories if they don't exist
-#         os.makedirs("yolov8_dataset/train/images", exist_ok=True)
-#         os.makedirs("yolov8_dataset/train/labels", exist_ok=True)
-#         os.makedirs("yolov8_dataset/val/images", exist_ok=True)
-#         os.makedirs("yolov8_dataset/val/labels", exist_ok=True)
-#         os.makedirs("yolov8_dataset/test/images", exist_ok=True)
-#         os.makedirs("yolov8_dataset/test/labels", exist_ok=True)
-
-#         # Save YAML configuration with correct paths
-#         yaml_content = {
-#             'path': 'yolov8_dataset',  # Root directory without leading ./
-#             'train': 'train/images',   # No leading ./
-#             'val': 'val/images',       # No leading ./
-#             'test': 'test/images',     # No leading ./
-#             'names': {
-#                 0: 'auto',
-#                 1: 'bicycle',
-#                 2: 'bus',
-#                 3: 'car',
-#                 4: 'tempo',
-#                 5: 'tractor',
-#                 6: 'two_wheelers',
-#                 7: 'vehicle_truck'
-#             }
-#         }
-
-#         with open('yolov8_dataset/custom_dataset.yaml', 'w') as f:
-#             yaml.dump(yaml_content, f, default_flow_style=False)
-
-#         # Extract and save images and labels from the dataset
-#         for split in ['train', 'val', 'test']:
-#             if split in ds:
-#                 for item in ds[split]:
-#                     # Save image
-#                     if 'image' in item:
-#                         img = Image.fromarray(item['image'])
-#                         img.save(f"yolov8_dataset/{split}/images/{item['image_id']}.jpg")
-
-#                     # Save label
-#                     if 'labels' in item:
-#                         with open(f"yolov8_dataset/{split}/labels/{item['image_id']}.txt", 'w') as f:
-#                             for label in item['labels']:
-#                                 f.write(f"{label['class']} {label['x_center']} {label['y_center']} {label['width']} {label['height']}\n")
-
-#         st.success("Dataset downloaded and prepared successfully!")
-#         return True
-#     except Exception as e:
-#         st.error(f"Error downloading dataset: {str(e)}")
-#         return False
 
 @st.cache_resource
-def download_dataset_from_huggingface():
-    """Download and prepare the dataset from Hugging Face repo structure manually"""
+def download_dataset_from_gdrive():
     try:
-        st.info("Downloading dataset from Hugging Face... This may take a few minutes.")
+        st.info("Downloading dataset .zip from Google Drive...")
 
-        # Tải toàn bộ repo về thư mục local
-        snapshot_download(
-            repo_id="lbnm203/yolov8_dataset",
-            repo_type="dataset",
-            local_dir="yolov8_dataset",
-            local_dir_use_symlinks=False
+        # ✅ File ID từ link của bạn
+        file_id = "1KNgMtAIjTXRCx-Q-xLb_dida3YDnRG5K"
+        zip_output = "yolov8_dataset.zip"
+
+        # Tải file .zip
+        gdown.download(
+            url=f"https://drive.google.com/uc?id={file_id}",
+            output=zip_output,
+            quiet=False
         )
 
-        # Kiểm tra lại cấu trúc thư mục sau khi tải
-        required_dirs = [
-            "yolov8_dataset/train/images",
-            "yolov8_dataset/train/labels",
-            "yolov8_dataset/val/images",
-            "yolov8_dataset/val/labels",
-            "yolov8_dataset/test/images",
-            "yolov8_dataset/test/labels"
-        ]
-        for d in required_dirs:
-            os.makedirs(d, exist_ok=True)
+        # Giải nén
+        with zipfile.ZipFile(zip_output, 'r') as zip_ref:
+            zip_ref.extractall(".")
 
-        # Ghi file cấu hình YAML cho YOLO
-        yaml_content = {
-            'path': 'yolov8_dataset',
-            'train': 'train/images',
-            'val': 'val/images',
-            'test': 'test/images',
-            'names': {
-                0: 'auto',
-                1: 'bicycle',
-                2: 'bus',
-                3: 'car',
-                4: 'tempo',
-                5: 'tractor',
-                6: 'two_wheelers',
-                7: 'vehicle_truck'
-            }
-        }
+        # Kiểm tra kết quả
+        yaml_path = "yolov8_dataset/custom_dataset.yaml"
+        if os.path.exists(yaml_path):
+            st.success("✅ Dataset downloaded and extracted successfully!")
+            return True
+        else:
+            st.error("❌ `custom_dataset.yaml` not found after extraction.")
+            return False
 
-        with open('yolov8_dataset/custom_dataset.yaml', 'w') as f:
-            yaml.dump(yaml_content, f, default_flow_style=False)
-
-        st.success("Dataset downloaded and ready!")
-        return True
     except Exception as e:
         st.error(f"Error downloading dataset: {str(e)}")
         return False
@@ -129,27 +49,15 @@ def data_description():
     # Check if dataset exists locally
     yaml_path = './yolov8_dataset/custom_dataset.yaml'
     if not os.path.exists(yaml_path):
-        st.warning(
-            "Dataset not found locally. Attempting to download from Hugging Face...")
+        st.warning("Dataset not found locally. Attempting to download from Google Drive...")
 
-        # Add a button to trigger download
-        if st.button("Download Dataset from Hugging Face"):
-            success = download_dataset_from_huggingface()
+        if st.button("Download Dataset from Google Drive"):
+            success = download_dataset_from_gdrive()
             if not success:
-                st.error(
-                    "Failed to download dataset. Please try again or download manually.")
-                st.info("""
-                ### Manual Download Instructions:
-                
-                1. Download the Indian Vehicle Dataset from [Kaggle](https://www.kaggle.com/datasets/dataclusterlabs/indian-vehicle-dataset)
-                2. Extract the downloaded file
-                3. Place the extracted folders in the `yolov8_dataset` directory
-                4. Ensure the `custom_dataset.yaml` file is properly configured
-                """)
+                st.error("Failed to download dataset. Please try again or download manually.")
                 return
         else:
-            st.info(
-                "Click the button above to download the dataset from Hugging Face.")
+            st.info("Click the button above to download the dataset from Google Drive.")
             return
 
     # Display dataset information
@@ -196,7 +104,7 @@ def data_description():
         test_dir = os.path.normpath(os.path.join(base_dir, test_path))
 
         # Debug paths
-        st.write(f"Debug - Train directory: {train_dir}")
+        # st.write(f"Debug - Train directory: {train_dir}")
 
         # Check if directories exist
         if not os.path.exists(train_dir):
